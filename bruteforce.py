@@ -52,7 +52,7 @@ def try_order_and_heights(order, heights, g):
 
 def paint_lgraph(order, heights, lengths):
     HEIGHT = 500
-    WIDTH = 500
+    WIDTH = HEIGHT
     n = len(order)
     UNIT = HEIGHT/(n+2)
     window = tk.Tk()
