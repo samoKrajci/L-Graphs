@@ -11,3 +11,11 @@ For each vertex ordering we try to construct an L-graph representation with the 
 
 That is, for each vertex we find the minimal height required for it's vertical line to intersect with every smaller vertex (in current ordering) and minimal lenght of it's horizontal line such as it reaches every greater vertex.
 If during this process two lines that should not intersect do intersect, there is no representation which induces given ordering.
+
+## stats
+
+We can observe the amount of *good* and *bad* orderings.
+
+Here is a graph of `good_oderings/all_orderings` for random graphs (with given number of nodes and edges) with up to 8 nodes, with 10 graphs for each number and edges count combination:
+
+![](stats.png)
