@@ -1,12 +1,6 @@
 import itertools as it
-import tkinter as tk
 import numpy as np
-
-
-def print_graph(g):
-    print(len(g))
-    for k, v in g.items():
-        print(k, ':', v)
+from graph_utils import read_graph, random_graph, paint_lgraph, print_graph
 
 
 def get_lgraph(g):
@@ -16,8 +10,7 @@ def get_lgraph(g):
         heights, lengths = try_order(order, g)
         if not lengths:
             continue
-        paint_lgraph(order, heights, lengths)
-        return True
+        return order, flip_array(heights), lengths
     print('given graph is not an L-graph')
     return False
 
@@ -87,44 +80,12 @@ def flip_array(array):
     return f_array
 
 
-def paint_lgraph(order, heights, lengths):
-    '''
-    Funkcia iba vykresli graf ak vie poradie vrcholov a tvary L-iek
-    '''
-
-    print(order, heights, lengths)
-    HEIGHT = 500
-    WIDTH = HEIGHT
-    n = len(order)
-    UNIT = HEIGHT/(n+2)
-    window = tk.Tk()
-
-    flipped_heights = flip_array(heights)
-
-    c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
-
-    c.create_line(0, UNIT, (n+2)*UNIT, UNIT)
-
-    for i, o in enumerate(order):
-        l, h = lengths[o], flipped_heights[o]
-        c.create_text((i+1)*UNIT, UNIT/2, text=str(o))
-        c.create_line((i+1)*UNIT, UNIT, (i+1)*UNIT, (h+2)*UNIT)
-        c.create_line((i+1)*UNIT, (h+2)*UNIT, (l+1.5)*UNIT, (h+2)*UNIT)
-
-    c.pack()
-    window.mainloop()
+def main():
+    graph = read_graph()
+    print_graph(graph)
+    order, heights, lenghts = get_lgraph(graph)
+    paint_lgraph(order, heights, lenghts)
 
 
-node_count, edge_count = map(int, input().split())
-
-graph = {}
-for i in range(node_count):
-    graph[i] = []
-
-for _ in range(edge_count):
-    a, b = map(int, input().split())
-    graph[a].append(b)
-    graph[b].append(a)
-
-print_graph(graph)
-get_lgraph(graph)
+if __name__ == "__main__":
+    main()

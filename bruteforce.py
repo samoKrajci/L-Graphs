@@ -1,11 +1,5 @@
 import itertools as it
-import tkinter as tk
-
-
-def print_graph(g):
-    print(len(g))
-    for k, v in g.items():
-        print(k, ':', v)
+from graph_utils import paint_lgraph, print_graph, read_graph
 
 
 def get_lgraph(g):
@@ -50,37 +44,12 @@ def try_order_and_heights(order, heights, g):
     return lengths
 
 
-def paint_lgraph(order, heights, lengths):
-    HEIGHT = 500
-    WIDTH = HEIGHT
-    n = len(order)
-    UNIT = HEIGHT/(n+2)
-    window = tk.Tk()
+def main():
+    graph = read_graph()
 
-    c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
-
-    c.create_line(0, UNIT, (n+2)*UNIT, UNIT)
-
-    for i, p in enumerate(zip(order, lengths, heights)):
-        (o, l, h) = p
-        c.create_text((i+1)*UNIT, UNIT/2, text=str(o))
-        c.create_line((i+1)*UNIT, UNIT, (i+1)*UNIT, (h+2)*UNIT)
-        c.create_line((i+1)*UNIT, (h+2)*UNIT, (l+1.5)*UNIT, (h+2)*UNIT)
-
-    c.pack()
-    window.mainloop()
+    print_graph(graph)
+    get_lgraph(graph)
 
 
-node_count, edge_count = map(int, input().split())
-
-graph = {}
-for i in range(node_count):
-    graph[i] = []
-
-for _ in range(edge_count):
-    a, b = map(int, input().split())
-    graph[a].append(b)
-    graph[b].append(a)
-
-print_graph(graph)
-get_lgraph(graph)
+if __name__ == "__main__":
+    main()
