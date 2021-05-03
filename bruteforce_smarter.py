@@ -1,6 +1,7 @@
 import itertools as it
 import numpy as np
 from graph_utils import read_graph, random_graph, paint_lgraph, print_graph
+import time
 
 
 def get_lgraph(g):
@@ -10,9 +11,9 @@ def get_lgraph(g):
         heights, lengths = try_order(order, g)
         if not lengths:
             continue
-        return order, flip_array(heights), lengths
+        return order, heights, lengths
     print('given graph is not an L-graph')
-    return False
+    return False, False, False
 
 
 def try_order(order, g):
@@ -36,7 +37,7 @@ def try_order(order, g):
         vert_order.insert(min_height, v)
         lengths[v] = get_min_length(v, i, order, g)
 
-    return vert_order, lengths
+    return flip_array(vert_order), lengths
 
 
 def get_min_height(v, v_index, vert_order, lengths, g):
@@ -82,9 +83,16 @@ def flip_array(array):
 
 def main():
     graph = read_graph()
+    # graph = random_graph(11, 20)
     print_graph(graph)
+
+    tic = time.perf_counter()
     order, heights, lenghts = get_lgraph(graph)
-    paint_lgraph(order, heights, lenghts)
+    toc = time.perf_counter()
+    print(f"Finding an ordering took {toc - tic:0.4f} seconds")
+
+    if order:
+        paint_lgraph(order, heights, lenghts)
 
 
 if __name__ == "__main__":
