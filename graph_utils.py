@@ -44,12 +44,35 @@ def random_graph(node_count, edge_count):
     return graph
 
 
-def paint_lgraph(order, heights, lengths):
+def draw_lgraph(canvas, unit, order, heights, lengths, bad_intersections = []):
+    n = len(order)
+    canvas.delete('all')
+    
+    canvas.create_line(0, unit, (n+2)*unit, unit)
+
+    for i, o in enumerate(order):
+        l, h = lengths[o], heights[o]
+        canvas.create_text((i+1)*unit, unit/2, text=str(o))
+        canvas.create_line((i+1)*unit, unit, (i+1)*unit, (h+2)*unit)
+        canvas.create_line((i+1)*unit, (h+2)*unit, (l+1.5)*unit, (h+2)*unit)
+
+    for point in bad_intersections:
+        canvas.create_oval(
+            (point[0]+1)*unit-unit*0.1, 
+            (point[1]+1)*unit-unit*0.1, 
+            (point[0]+1)*unit+unit*0.1, 
+            (point[1]+1)*unit+unit*0.1,
+            fill = 'red'
+        )
+
+    canvas.pack()
+    
+
+def paint_lgraph(order, heights, lengths, bad_intersections = []):
     '''
     Funkcia iba vykresli graf ak vie poradie vrcholov a tvary L-iek
     '''
 
-    print(order, heights, lengths)
     HEIGHT = 500
     WIDTH = HEIGHT
     n = len(order)
@@ -58,15 +81,8 @@ def paint_lgraph(order, heights, lengths):
 
     c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
 
-    c.create_line(0, UNIT, (n+2)*UNIT, UNIT)
-
-    for i, o in enumerate(order):
-        l, h = lengths[o], heights[o]
-        c.create_text((i+1)*UNIT, UNIT/2, text=str(o))
-        c.create_line((i+1)*UNIT, UNIT, (i+1)*UNIT, (h+2)*UNIT)
-        c.create_line((i+1)*UNIT, (h+2)*UNIT, (l+1.5)*UNIT, (h+2)*UNIT)
-
-    c.pack()
+    draw_lgraph(c, UNIT, order, heights, lengths, bad_intersections)
+    
     window.mainloop()
 
 
