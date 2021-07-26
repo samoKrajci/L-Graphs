@@ -1,5 +1,6 @@
 from graph_utils import random_graph
 import bruteforce_smarter as bs
+import bruteforce_smarter_parallel as bsp
 import pattern_elimination as pe
 import time
 
@@ -8,7 +9,7 @@ def compare(get_lgraph_a, label_a, get_lgraph_b, label_b):
     '''
     compares two methods on a random graph
     '''
-    graph = random_graph(12, 15)
+    graph = random_graph(11, 15)
 
     tic = time.perf_counter()
     get_lgraph_a(graph)
@@ -23,4 +24,4 @@ def compare(get_lgraph_a, label_a, get_lgraph_b, label_b):
 
 
 if __name__ == "__main__":
-    compare(pe.get_lgraph, 'pattern elimination', bs.get_lgraph, 'bruteforce')
+    compare(bs.get_lgraph, 'bruteforce', bsp.get_lgraph, 'parallel')
