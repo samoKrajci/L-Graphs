@@ -1,10 +1,8 @@
-import itertools as it
 from pattern_elimination import num_to_perm
-from graph_utils import read_graph, random_graph, paint_lgraph, print_graph
+from graph_utils import random_graph, paint_lgraph, print_graph
 import time
 from bruteforce_smarter import try_order
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from random import shuffle
 from math import factorial
 from multiprocessing import cpu_count
 
@@ -32,8 +30,6 @@ def try_orders(g, order_left, order_right):
 
 
 def get_lgraph(g):
-    # permutations_batches = split_permutations(len(g), cpu_count())
-
     executor = ProcessPoolExecutor()
     seg_size = factorial(len(g))/cpu_count()
     processes = map(lambda i: executor.submit(
