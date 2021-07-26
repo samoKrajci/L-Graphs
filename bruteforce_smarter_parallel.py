@@ -21,36 +21,20 @@ def permutation_from_number(number, length):
 
 
 def try_orders(g, order_left, order_right):
-    print('start try_order')
     for order_num in range(order_left, order_right):
         order = num_to_perm(order_num, len(g))
 
         heights, lengths = try_order(order, g)
         if not lengths:
             continue
-        print('end try_order')
         return order, heights, lengths
-    print('end try_order')
     return False, False, False
-
-
-def split_permutations(n, groups_count):
-    print('start split_permutations')
-    p = list(it.permutations(range(n)))
-    ret = []
-    seg_size = factorial(n)/groups_count
-    for i in range(groups_count):
-        ret.append(p[round(seg_size*i): round(seg_size*(i+1))])
-    print('end split_permutations')
-    return ret
 
 
 def get_lgraph(g):
     # permutations_batches = split_permutations(len(g), cpu_count())
 
-    print('pred ppe')
     executor = ProcessPoolExecutor()
-    print('po ppe')
     seg_size = factorial(len(g))/cpu_count()
     processes = map(lambda i: executor.submit(
         try_orders, g, round(seg_size*i), round(seg_size*(i+1))), range(cpu_count()))
