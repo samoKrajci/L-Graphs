@@ -1,44 +1,50 @@
-from pattern_elimination import num_to_perm
-from graph_utils import random_graph, paint_lgraph, print_graph
-import time
-from bruteforce_smarter import try_order
+from graph_utils import random_graph, paint_lgraph, print_graph, num_to_perm
+import bruteforce_smarter as bs
+import pattern_elimination as pe
+
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from math import factorial
 from multiprocessing import cpu_count
+from math import factorial
+import signal
+import psutil
+import os
+import time
 
 
-def permutation_from_number(number, length):
-    remaining = list(range(length))
-    ret = []
-    for i in range(length-1, -1, -1):
-        index_remove = number // factorial(i)
-        number %= factorial(i)
-        ret.append(remaining[index_remove])
-        remaining.pop(index_remove)
-    return ret
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        return
+    children = parent.children(recursive=True)
+    for process in children:
+        process.send_signal(sig)
 
 
-def try_orders(g, order_left, order_right):
+def try_orders_in_range(g, order_left, order_right, try_order_func):
     for order_num in range(order_left, order_right):
         order = num_to_perm(order_num, len(g))
 
-        heights, lengths = try_order(order, g)
+        heights, lengths = try_order_func(order, g)
         if not lengths:
             continue
         return order, heights, lengths
     return False, False, False
 
 
-def get_lgraph(g):
+def get_lgraph_parallel(g, try_order_func):
     executor = ProcessPoolExecutor()
     seg_size = factorial(len(g))/cpu_count()
     processes = map(lambda i: executor.submit(
-        try_orders, g, round(seg_size*i), round(seg_size*(i+1))), range(cpu_count()))
+        try_orders_in_range, g, round(seg_size*i), round(seg_size*(i+1)), try_order_func), range(cpu_count()))
 
     for process in as_completed(processes):
         order, heights, lengths = process.result()
         if order:
             map(lambda p: p.cancel(), processes)
+          
+            kill_child_processes(os.getpid())
+
             return order, heights, lengths
 
     print('given graph is not an L-graph')
@@ -47,11 +53,11 @@ def get_lgraph(g):
 
 def main():
     # graph = read_graph()
-    graph = random_graph(13, 15)
+    graph = random_graph(12, 15)
     print_graph(graph)
 
     tic = time.perf_counter()
-    order, heights, lenghts = get_lgraph(graph)
+    order, heights, lenghts = get_lgraph_parallel(graph, pe.try_order)
     toc = time.perf_counter()
     print(f"Finding an ordering took {toc - tic:0.4f} seconds")
 

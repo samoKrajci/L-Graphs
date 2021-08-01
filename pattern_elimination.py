@@ -1,5 +1,5 @@
 from math import factorial
-from graph_utils import read_graph, paint_lgraph, print_graph, random_graph
+from graph_utils import read_graph, paint_lgraph, print_graph, random_graph, num_to_perm
 from bruteforce_smarter import try_order
 from itertools import combinations
 import numpy as np
@@ -50,23 +50,6 @@ def get_first_distinct_index(la, lb):
         if not (a == b):
             return index
         index += 1
-
-
-def num_to_perm(num, n):
-    '''
-    prevedie cislo do faktorialovej sustavy a vrati zodpovedajucu permutaciu
-    '''
-    available = list(range(n))
-    out = []
-    i = n-1
-    while i > 0:
-        temp = num // factorial(i)
-        out.append(available[temp])
-        available.pop(temp)
-        num %= factorial(i)
-        i -= 1
-    out.append(available[0])
-    return out
 
 
 def get_next_perm_num(perm_num, start_index, g):

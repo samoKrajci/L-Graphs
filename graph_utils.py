@@ -1,5 +1,6 @@
 import numpy as np
 import tkinter as tk
+from math import factorial
 
 
 def read_graph():
@@ -44,10 +45,10 @@ def random_graph(node_count, edge_count):
     return graph
 
 
-def draw_lgraph(canvas, unit, order, heights, lengths, bad_intersections = []):
+def draw_lgraph(canvas, unit, order, heights, lengths, bad_intersections=[]):
     n = len(order)
     canvas.delete('all')
-    
+
     canvas.create_line(0, unit, (n+2)*unit, unit)
 
     for i, o in enumerate(order):
@@ -58,17 +59,17 @@ def draw_lgraph(canvas, unit, order, heights, lengths, bad_intersections = []):
 
     for point in bad_intersections:
         canvas.create_oval(
-            (point[0]+1)*unit-unit*0.1, 
-            (point[1]+1)*unit-unit*0.1, 
-            (point[0]+1)*unit+unit*0.1, 
+            (point[0]+1)*unit-unit*0.1,
+            (point[1]+1)*unit-unit*0.1,
+            (point[0]+1)*unit+unit*0.1,
             (point[1]+1)*unit+unit*0.1,
-            fill = 'red'
+            fill='red'
         )
 
     canvas.pack()
-    
 
-def paint_lgraph(order, heights, lengths, bad_intersections = []):
+
+def paint_lgraph(order, heights, lengths, bad_intersections=[]):
     '''
     Funkcia iba vykresli graf ak vie poradie vrcholov a tvary L-iek
     '''
@@ -82,7 +83,7 @@ def paint_lgraph(order, heights, lengths, bad_intersections = []):
     c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
 
     draw_lgraph(c, UNIT, order, heights, lengths, bad_intersections)
-    
+
     window.mainloop()
 
 
@@ -90,3 +91,21 @@ def print_graph(g):
     print(len(g))
     for k, v in g.items():
         print(k, ':', v)
+
+def num_to_perm(num, n):
+    '''
+    prevedie cislo do faktorialovej sustavy a vrati zodpovedajucu permutaciu
+    '''
+    available = list(range(n))
+    out = []
+    i = n-1
+    while i > 0:
+        temp = num // factorial(i)
+        out.append(available[temp])
+        available.pop(temp)
+        num %= factorial(i)
+        i -= 1
+    out.append(available[0])
+    return out
+
+

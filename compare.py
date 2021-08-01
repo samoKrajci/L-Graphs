@@ -1,7 +1,7 @@
 from graph_utils import random_graph
 import bruteforce_smarter as bs
-import bruteforce_smarter_parallel as bsp
 import pattern_elimination as pe
+import parallelization
 import time
 
 
@@ -24,4 +24,5 @@ def compare(get_lgraph_a, label_a, get_lgraph_b, label_b):
 
 
 if __name__ == "__main__":
-    compare(bs.get_lgraph, 'bruteforce', bsp.get_lgraph, 'parallel')
+    compare(lambda g: parallelization.get_lgraph_parallel(
+        g, pe.try_order), 'parallel', pe.get_lgraph, 'bruteforce')
