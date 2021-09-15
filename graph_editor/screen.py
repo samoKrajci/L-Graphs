@@ -10,7 +10,16 @@ from tooltip import create_tool_tip
 #   loadnutie grafu
 
 class Screen:
-    def __init__(self, height: float=500, width: float=500, v_diameter: float=10):
+    def __init__(
+        self, 
+        height: float=500, 
+        width: float=500, 
+        v_diameter: float=10, 
+        output_file: str='graph.txt', 
+        verbose: bool=True
+    ):
+        self.output_file = output_file
+        self.verbose = verbose
         self.w = tk.Tk()
         self.c = tk.Canvas(height=height, width=width, background='white')
         self.height = height
@@ -237,7 +246,8 @@ class Screen:
         self.selected = None
 
     def save(self):
-        file = open('graph.txt', 'w')
-        print('-------------------------')
-        print(self.g.str())
-        file.write(self.g.str())
+        file = open(self.output_file, 'w')
+        if self.verbose:
+            print('------------ Graph saved -------------')
+            print(self.g.str())
+            file.write(self.g.str())
