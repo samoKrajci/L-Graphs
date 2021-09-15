@@ -1,4 +1,4 @@
-from graph_utils import random_graph, paint_lgraph, print_graph, num_to_perm
+from graph_utils import random_graph, paint_lgraph, print_graph, num_to_perm, read_graph
 import bruteforce_smarter as bs
 import pattern_elimination as pe
 
@@ -33,6 +33,8 @@ def try_orders_in_range(g, order_left, order_right, try_order_func):
 
 
 def get_lgraph_parallel(g, try_order_func):
+    if len(g) == 0:
+        return [], [], []
     executor = ProcessPoolExecutor()
     seg_size = factorial(len(g))/cpu_count()
     processes = map(lambda i: executor.submit(
@@ -51,19 +53,20 @@ def get_lgraph_parallel(g, try_order_func):
     return False, False, False
 
 
-def main():
-    # graph = read_graph()
-    graph = random_graph(12, 15)
-    print_graph(graph)
+def paint_lgraph_from_file(file: str='./graph.txt', master: any=None, verbose: bool=False):
+    graph = read_graph(file=file)
+    if verbose:
+        print_graph(graph)
 
     tic = time.perf_counter()
     order, heights, lenghts = get_lgraph_parallel(graph, pe.try_order)
     toc = time.perf_counter()
-    print(f"Finding an ordering took {toc - tic:0.4f} seconds")
+    if verbose:
+        print(f"Finding an ordering took {toc - tic:0.4f} seconds")
 
-    if order:
-        paint_lgraph(order, heights, lenghts)
+    if order != None:
+        paint_lgraph(order, heights, lenghts, master=master)
 
 
 if __name__ == "__main__":
-    main()
+    paint_lgraph_from_file()

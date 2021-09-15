@@ -3,18 +3,24 @@ import tkinter as tk
 from math import factorial
 
 
-def read_graph():
+def read_graph(file: str=None):
     '''
-    read graph from standard input
+    read graph from file or stdin if not specified
     '''
-    node_count, edge_count = map(int, input().split())
+    read_fn: callable = None
+    f = None
+    if file:
+        f = open(file, 'r')
+        read_fn = f.readline
+
+    node_count, edge_count = map(int, read_fn().split())
 
     graph = {}
     for i in range(node_count):
         graph[i] = []
 
     for _ in range(edge_count):
-        a, b = map(int, input().split())
+        a, b = map(int, read_fn().split())
         graph[a].append(b)
         graph[b].append(a)
 
@@ -66,26 +72,24 @@ def draw_lgraph(canvas, unit, order, heights, lengths, bad_intersections=[]):
             fill='red'
         )
 
-    canvas.pack()
-
-
-def paint_lgraph(order, heights, lengths, bad_intersections=[]):
+def paint_lgraph(order, heights, lengths, bad_intersections=[], master=None):
     '''
     Funkcia iba vykresli graf ak vie poradie vrcholov a tvary L-iek
     '''
-
     HEIGHT = 500
     WIDTH = HEIGHT
     n = len(order)
     UNIT = HEIGHT/(n+2)
-    window = tk.Tk()
+    if not master:
+        window = tk.Tk()
 
-    c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
+    c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white', master=master)
+    c.pack()
 
     draw_lgraph(c, UNIT, order, heights, lengths, bad_intersections)
 
-    window.mainloop()
-
+    if not master:
+        window.mainloop()
 
 def print_graph(g):
     print(len(g))

@@ -1,7 +1,9 @@
 import tkinter as tk
+from typing import Callable
 from graph import Graph
 import random
 from tooltip import create_tool_tip
+import os
 
 # TODO:
 #   premiestnovanie vrcholov (aj hrany sa musia zaroven hybat)
@@ -16,10 +18,16 @@ class Screen:
         width: float=500, 
         v_diameter: float=10, 
         output_file: str='graph.txt', 
-        verbose: bool=True
+        verbose: bool=True,
+        submit_fn: Callable[[str, any], any]=None,
+        submit_button_text: str='Submit',
+        submit_button_tooltip: str=''
     ):
         self.output_file = output_file
         self.verbose = verbose
+        self.submit_fn = submit_fn
+        self.sumbit_button_text = submit_button_text
+        self.submit_button_tooltip = submit_button_tooltip
         self.w = tk.Tk()
         self.c = tk.Canvas(height=height, width=width, background='white')
         self.height = height
@@ -41,6 +49,7 @@ class Screen:
         self.w.mainloop()
 
     def init_buttons(self):
+        # Mode button
         self.b_mode = tk.Button(
             master=self.w, 
             text='mode [m]', 
@@ -48,7 +57,7 @@ class Screen:
         )
         self.b_mode.place(x=0, y=0)
         create_tool_tip(self.b_mode, text='Switch between remove and add mode')
-
+        # Clear button
         self.b_clear = tk.Button(
             master=self.w, 
             text='clear [c]', 
@@ -56,7 +65,7 @@ class Screen:
         )
         self.b_clear.place(x=0, y=30)
         create_tool_tip(self.b_clear, text='Remove all nodes')
-        
+        # Save button
         self.b_save = tk.Button(
             master=self.w, 
             text='save [s]', 
@@ -64,7 +73,23 @@ class Screen:
         )
         self.b_save.place(x=0, y=60)
         create_tool_tip(self.b_save, text='Save graph to \'<current_dir>/graph.txt\'')
-        
+        # Submit button
+        if self.submit_fn:
+            self.b_submit = tk.Button(
+                master=self.w, 
+                text=self.sumbit_button_text, 
+                command=self.submit_pipeline
+            )
+            self.b_submit.place(x=0, y=90)
+            create_tool_tip(self.b_submit, text=self.submit_button_tooltip)
+
+    def submit_pipeline(self):
+        temp_file_name = '_temp_graph.txt'
+        self.save(output_file=temp_file_name)
+        new_window = tk.Toplevel(self.w)
+        self.submit_fn(temp_file_name, master=new_window)
+        os.remove(temp_file_name)
+
     def init_bindings(self):
         self.c.tag_bind('vertex', '<Button-1>', self.click_vertex)
         self.c.tag_bind('vertex', '<B1-Motion>', self.move_vertex)
@@ -245,8 +270,10 @@ class Screen:
         self.moving_edge = None
         self.selected = None
 
-    def save(self):
-        file = open(self.output_file, 'w')
+    def save(self, output_file: str=None):
+        if not output_file:
+            output_file = self.output_file
+        file = open(output_file, 'w')
         if self.verbose:
             print('------------ Graph saved -------------')
             print(self.g.str())
