@@ -1,5 +1,7 @@
 from tkinter import *
 
+# module taken from 
+# https://stackoverflow.com/questions/20399243/display-message-when-hovering-over-something-with-mouse-cursor-in-python
 class ToolTip(object):
 
     def __init__(self, widget):
