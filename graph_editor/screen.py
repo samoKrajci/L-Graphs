@@ -96,7 +96,7 @@ class Screen:
 
     def submit_pipeline(self):
         temp_file_name = '_temp_graph.txt'
-        self.save(output_file=temp_file_name)
+        self.save(output_file=temp_file_name, verbose=False)
         new_window = tk.Toplevel(self.w)
         self.submit_fn(temp_file_name, master=new_window)
         os.remove(temp_file_name)
@@ -332,11 +332,13 @@ class Screen:
         self.moving_edge = None
         self.selected = None
 
-    def save(self, output_file: str=None):
+    def save(self, output_file: str=None, verbose=None):
+        if verbose is None:
+            verbose = self.verbose
         if not output_file:
             output_file = self.output_file
         file = open(output_file, 'w')
-        if self.verbose:
+        if verbose:
             print('------------ Graph saved -------------')
             print(self.g.str())
-            file.write(self.g.str())
+        file.write(self.g.str())
