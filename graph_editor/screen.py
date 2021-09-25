@@ -15,15 +15,15 @@ class Screen:
         self, 
         height: float=500, 
         width: float=500, 
-        v_diameter: float=10, 
-        output_file: str='graph.txt', 
+        v_diameter: float=15, 
+        output_file: str=None, 
         input_file: str=None, 
         verbose: bool=True,
         submit_fn: Callable[[str, any], any]=None,
         submit_button_text: str='Submit',
         submit_button_tooltip: str=''
     ):
-        self.output_file = output_file
+        self.output_file = output_file or 'graph.txt'
         self.verbose = verbose
         self.submit_fn = submit_fn
         self.sumbit_button_text = submit_button_text
@@ -35,8 +35,9 @@ class Screen:
         self.v_diameter = v_diameter
         self.remove_mode = False
         self.selected = None
-        self.vertex_id = {}
-        self.edge_id = {}
+        self.vertex_id = dict()
+        self.label_id = dict()
+        self.edge_id = dict()
         
         self.background = None
         self.moving_edge=None
@@ -102,7 +103,9 @@ class Screen:
 
     def init_bindings(self):
         self.c.tag_bind('vertex', '<Button-1>', self.click_vertex)
+        self.c.tag_bind('label', '<Button-1>', self.click_label)
         self.c.tag_bind('vertex', '<B1-Motion>', self.move_vertex)
+        self.c.tag_bind('label', '<B1-Motion>', self.move_label)
         self.c.tag_bind('edge', '<Button-1>', self.click_edge)
         self.c.tag_bind('moving_edge', '<Button-1>', self.click_moving_edge)
         self.c.tag_bind('background', '<Button-1>', self.click_background)
@@ -152,8 +155,6 @@ class Screen:
         for line_i in range(1, m+1):
             l = lines[line_i].split()
             self.add_edge(v_map[int(l[0])], v_map[int(l[1])])
-        
-
 
     def change_mode(self, remove_mode: bool=None):
         if self.remove_mode != remove_mode:
@@ -164,16 +165,21 @@ class Screen:
             else:
                 self.c.itemconfig(self.background, width=0)
 
-    def move_vertex(self, event):
+    def move_vertex(self, event, vertex=None):
         if not self.remove_mode:
             self.unselect_vertex()
-            v = event.widget.find_withtag('current')[0]
+            v = vertex or event.widget.find_withtag('current')[0]
             self.c.coords(
                 v, 
                 event.x - self.v_diameter,
                 event.y - self.v_diameter,
                 event.x + self.v_diameter,
                 event.y + self.v_diameter,
+            )
+            self.c.coords(
+                self.label_id[v],
+                event.x,
+                event.y
             )
             for id, e in self.edge_id.items():
                 if e[0] == v or e[1] == v:
@@ -190,8 +196,14 @@ class Screen:
                         mid_b[1]
                     )
 
-    def click_vertex(self, event):
-        v = event.widget.find_withtag('current')[0]
+    def move_label(self, event):
+        clicked_label = event.widget.find_withtag('current')[0]
+        for v, l in self.label_id.items():
+            if l == clicked_label:
+                return self.move_vertex(event, v)
+
+    def click_vertex(self, event, vertex=None):
+        v = vertex or event.widget.find_withtag('current')[0]
         if self.remove_mode:
             self.remove_vertex(v)
         
@@ -200,6 +212,12 @@ class Screen:
                 self.select_vertex(v)
             else:
                 self.add_edge(self.selected, v)
+
+    def click_label(self, event):
+        clicked_label = event.widget.find_withtag('current')[0]
+        for v, l in self.label_id.items():
+            if l == clicked_label:
+                return self.click_vertex(event, v)
 
     def click_edge(self, event):
         if self.remove_mode:
@@ -219,6 +237,13 @@ class Screen:
             if self.selected:
                 pass
 
+    def relabel(self):
+        for v, l in self.label_id.items():
+            self.c.itemconfig(
+                l, 
+                text=self.g.labels[self.vertex_id[v]]
+            )
+
     def add_vertex(self, x: float=None, y: float=None):
         if not x:
             x = random.uniform(100, self.width - self.v_diameter)
@@ -236,17 +261,29 @@ class Screen:
             activeoutline='red',
             tags='vertex'
         )
-        self.vertex_id[v] = self.g.add_vertex()
+        backend_id = self.g.add_vertex()
+        l = self.c.create_text(
+            x,
+            y,
+            text = self.g.labels[backend_id],
+            fill='white',
+            tags='label'
+        )
+        self.vertex_id[v] = backend_id
+        self.label_id[v] = l
         return v
     
     def remove_vertex(self, v_canvas_id):
         self.c.delete(v_canvas_id)
+        self.c.delete(self.label_id[v_canvas_id])
         self.g.remove_vertex(self.vertex_id[v_canvas_id])
         for e, p in list(self.edge_id.items()):
             if p[0] == v_canvas_id or p[1] == v_canvas_id:
                 self.c.delete(e)
                 del self.edge_id[e]
         del self.vertex_id[v_canvas_id]
+        del self.label_id[v_canvas_id]
+        self.relabel()
 
     def add_edge(self, a_canvas_id: int, b_canvas_id: int):
         self.unselect_vertex()
