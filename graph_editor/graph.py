@@ -1,6 +1,7 @@
 class Graph:
     def __init__(self, directed: bool=False):
         self.vertices = dict()
+        self.labels = dict()
         self.directed = directed
         self.n = 0
         self.m = 0
@@ -12,6 +13,7 @@ class Graph:
         returns id of added vertex
         '''
         self.vertices[self.next_id] = set()
+        self.labels[self.next_id] = self.n
         self.n += 1
         self.next_id += 1
         return self.next_id - 1
@@ -30,6 +32,7 @@ class Graph:
         for adj in self.vertices.values():
             if a in adj:
                 adj.remove(a)
+        self.relabel()
         return True
 
     def add_edge(self, a: int, b: int) -> bool:
@@ -66,6 +69,16 @@ class Graph:
         else:
             return False
 
+    def relabel(self):
+        '''
+        Relabels vertices so the labels are unique integers in [0, n)
+        '''
+        self.labels = dict()
+        next_available = 0
+        for v in self.vertices.keys():
+            self.labels[v]=next_available
+            next_available += 1
+
     def str(self):
         '''
         Serializes graph to standard graph format:
@@ -78,14 +91,26 @@ class Graph:
         '''
         s = ''
         s += f'{self.n} {self.m}'
-        v_map = dict()
-        next_available = 0
-        for v in self.vertices.keys():
-            v_map[v]=next_available
-            next_available += 1
+        self.relabel()
 
         for key, value in self.vertices.items():
             for v in value:
                 if key > v or self.directed:
-                    s += f'\n{v_map[key]} {v_map[v]}'
+                    s += f'\n{self.labels[key]} {self.labels[v]}'
         return s
+
+
+def read_graph(file: str, directed: bool=False) -> Graph:
+    g = Graph(directed=directed)
+    f = open(file, 'r')
+    l = f.readline().split()
+    n, m = int(l[0]), int(l[1])
+    for _ in range(n):
+        g.add_vertex()
+    for _ in range(m):
+        l = f.readline().split()
+        a, b = int(l[0]), int(l[1])
+        g.add_edge(a, b)
+    return g
+
+

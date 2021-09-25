@@ -1,15 +1,14 @@
 import tkinter as tk
 from typing import Callable
-from graph import Graph
+from graph import Graph, read_graph
 import random
 from tooltip import create_tool_tip
 import os
 
 # TODO:
-#   premiestnovanie vrcholov (aj hrany sa musia zaroven hybat)
-#   squeeze pri printe grafu
-#   directed grafy 
 #   loadnutie grafu
+#   olabelovat vrcholy
+#   directed grafy 
 
 class Screen:
     def __init__(
@@ -18,6 +17,7 @@ class Screen:
         width: float=500, 
         v_diameter: float=10, 
         output_file: str='graph.txt', 
+        input_file: str=None, 
         verbose: bool=True,
         submit_fn: Callable[[str, any], any]=None,
         submit_button_text: str='Submit',
@@ -33,7 +33,6 @@ class Screen:
         self.height = height
         self.width = width
         self.v_diameter = v_diameter
-        self.g = Graph()
         self.remove_mode = False
         self.selected = None
         self.vertex_id = {}
@@ -42,10 +41,13 @@ class Screen:
         self.background = None
         self.moving_edge=None
         self.clear()
+        self.g = Graph() if not input_file else read_graph(input_file)
         self.init_bindings()
         self.init_buttons()
 
         self.c.pack(fill="both", expand=True)
+        if input_file:
+            self.random_paint_graph()
         self.w.mainloop()
 
     def init_buttons(self):
@@ -73,6 +75,14 @@ class Screen:
         )
         self.b_save.place(x=0, y=60)
         create_tool_tip(self.b_save, text='Save graph to \'<current_dir>/graph.txt\'')
+        # Randomize button
+        self.b_randomize = tk.Button(
+            master=self.w, 
+            text='randomize', 
+            command=self.random_paint_graph
+        )
+        self.b_randomize.place(x=0, y=90)
+        create_tool_tip(self.b_randomize, text='Randomly shuffle vertices')
         # Submit button
         if self.submit_fn:
             self.b_submit = tk.Button(
@@ -80,7 +90,7 @@ class Screen:
                 text=self.sumbit_button_text, 
                 command=self.submit_pipeline
             )
-            self.b_submit.place(x=0, y=90)
+            self.b_submit.place(x=0, y=120)
             create_tool_tip(self.b_submit, text=self.submit_button_tooltip)
 
     def submit_pipeline(self):
@@ -129,6 +139,21 @@ class Screen:
             width=0,
             outline='red'
         )
+
+    def random_paint_graph(self):
+        old_g_str = self.g.str()
+        lines = old_g_str.split('\n')
+        self.clear()
+        l = lines[0].split()
+        n, m = int(l[0]), int(l[1])
+        v_map = dict()
+        for i in range(n):
+            v_map[i] = self.add_vertex()
+        for line_i in range(1, m+1):
+            l = lines[line_i].split()
+            self.add_edge(v_map[int(l[0])], v_map[int(l[1])])
+        
+
 
     def change_mode(self, remove_mode: bool=None):
         if self.remove_mode != remove_mode:
@@ -196,9 +221,9 @@ class Screen:
 
     def add_vertex(self, x: float=None, y: float=None):
         if not x:
-            x = random.uniform(self.v_diameter, self.width - self.v_diameter)
+            x = random.uniform(100, self.width - self.v_diameter)
         if not y:
-            y = random.uniform(self.v_diameter, self.width - self.v_diameter)
+            y = random.uniform(100, self.height - self.v_diameter)
         
         v = self.c.create_oval(
             x - self.v_diameter, 
