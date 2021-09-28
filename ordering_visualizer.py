@@ -1,8 +1,21 @@
-import itertools as it
-import numpy as np
-from graph_utils import read_graph, random_graph, draw_lgraph, print_graph
-import time
+from graph_utils import read_graph, draw_lgraph
 import tkinter as tk
+import argparse
+
+parser = argparse.ArgumentParser(description='Grounded-L graph visualizer')
+
+parser.add_argument(
+    '-i', 
+    '--input-file', 
+    help='File with the input graph. ' 
+    'Defauls to empty graph'
+)
+
+class Args:
+    def __init__(self, input_file=None, output_file=None):
+        self.input_file = input_file
+        self.output_file = output_file
+
 
 def try_order(order, g):
     '''
@@ -126,9 +139,8 @@ class Painter:
 
 
 
-def main():
-    graph = read_graph()
-    print_graph(graph)
+def main(file=None):
+    graph = read_graph(file)
 
     window = tk.Tk()
     HEIGHT = 500
@@ -137,17 +149,10 @@ def main():
     
     c = tk.Canvas(height=HEIGHT, width=WIDTH, background='white')
 
-    p = Painter(c, graph, UNIT)
+    _ = Painter(c, graph, UNIT)
 
     window.mainloop()
 
-    # tic = time.perf_counter()
-    # order, heights, lenghts = get_lgraph(graph)
-    # toc = time.perf_counter()
-    # print(f"Finding an ordering took {toc - tic:0.4f} seconds")
-
-    # if order:
-    #     paint_lgraph(order, heights, lenghts)
 
 def paint_lgraph(order, heights, lengths, bad_intersections = []):
     '''
@@ -168,4 +173,5 @@ def paint_lgraph(order, heights, lengths, bad_intersections = []):
     window.mainloop()
 
 if __name__ == "__main__":
-    main()
+    args = parser.parse_args(namespace=Args)
+    main(file=args.input_file)

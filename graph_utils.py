@@ -7,7 +7,7 @@ def read_graph(file: str=None):
     '''
     read graph from file or stdin if not specified
     '''
-    read_fn: callable = None
+    read_fn: callable = input
     f = None
     if file:
         f = open(file, 'r')
