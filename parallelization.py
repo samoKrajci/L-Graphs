@@ -64,7 +64,7 @@ def paint_lgraph_from_file(file: str='./graph.txt', master: any=None, verbose: b
     if verbose:
         print(f"Finding an ordering took {toc - tic:0.4f} seconds")
 
-    if order != None:
+    if order:
         paint_lgraph(order, heights, lenghts, master=master)
 
 
