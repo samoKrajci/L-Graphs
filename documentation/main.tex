@@ -1,0 +1,171 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper, total={6.5in, 10in}]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{\medskipamount}
+\usepackage{mathtools}
+\usepackage{tcolorbox}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\usepackage{makecell}
+
+\renewcommand\theadalign{bc}
+\renewcommand\theadfont{\bfseries}
+\renewcommand\theadgape{\Gape[4pt]}
+\renewcommand\cellgape{\Gape[4pt]}
+
+\usepackage{listings}
+\usepackage{color}
+\definecolor{lightgray}{gray}{0.95}
+
+\lstset{
+    showstringspaces=false,
+    basicstyle=\ttfamily,
+    keywordstyle=\color{blue},
+    commentstyle=\color[grey]{0.6},
+    stringstyle=\color[RGB]{255,150,75}
+}
+
+\newcommand{\code}[1]{\colorbox{lightgray}{\lstinline{#1}}}
+
+\title{Grounded-L Grafy}
+\author{Samuel Krajči}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Úvod}
+
+Cieľom tohoto ročníkového projektu bolo vytvoriť rôzne nástroje na uľahčenie skúmania \textit{Grounded-L} triedy prienikových grafov.
+
+Konkrétne, boli vyvinuté tieto nástroje:
+
+\begin{itemize}
+    \item Kreslič grounded-L reprezentácie grafu
+        
+          hľadanie grounded-L reprezentácie sme implementopvali troma spôsobmi:
+          \begin{itemize}
+            \item hrubá sila (\textit{bruteforce})
+            \item eliminácia vzorov (\textit{pattern elimination})
+            \item paralelizácia
+        \end{itemize}
+    \item Editor usporiadania grounded-L grafov
+    \item Grafový editor
+\end{itemize}
+
+Všetky programy boli písané v jazyku \textit{Python}.
+
+\section{Kreslič grounded-L reprezentácie}
+
+Dejú sa tu dve veci. \textbf{Hľadanie} a samotné \textbf{vykreslenie} grounded-L reprezentácie.
+
+\subsubsection*{Vykreslenie} 
+
+Vykresľovanie je pomerne priamočiare a nezaujímavé, deje sa pomocou knižnice \textit{tkinter}. Implementácia sa nachádza v súbore \code{graph_utils.py}
+
+\subsubsection*{Hľadanie} 
+Hľadanie grounded-L reprezentácie je kľúčovou časťou celého projektu a je implementované viacerými spôsobmi, ktoré popíšeme nižšie.
+
+Grounded-L reprezentácia pozostáva z troch častí:
+\begin{itemize}
+    \item \textbf{poradie} vrcholov; je to permutácia vrcholov 
+    \item \textbf{výšky} (resp. hĺbky) nožičiek jednotlivých L-iek; je to permutácia vrcholov (podstatné sú iba relatívne výšky)
+    \item \textbf{dĺžky} pätiek jednotlivých L-iek
+\end{itemize}
+
+\paragraph{Hrubá sila}\mbox{} \\
+
+Najpriamočiarejší spôsob hľadanie týchto parametrov je \textit{hrubá sila}, teda pre každú kombináciu rôznych poradí, výšok a dĺžok overiť, či sa pretínajú práve tie L-ká, ktoré majú.
+Časová zložitosť takého algoritmu je $O(n!^3)$.
+
+O krok rozumnejšie je pre každú kombináciu poradia a výšky vypočítať pre každé L-ko minimálnu dĺžku aby dosiahlo na najvzdialenejšieho suseda a opäť overiť nadbytočné prieniky. Časová zložitosť nám klesne na $O(n!^2)$. Presne tento algoritmus je implementovaný v súbore \code{bruteforce.py}.
+
+Podobne ako sme sa vyhli prehľadávaniu všetkých možností dĺžok sa vieme vyhnúť aj prehľadávaniu všetkých možností výšok.
+Zľava doprava budeme L-kám priraďovať výšky a každému ďalšiemu dáme minimálnu výšku aby siahalo nižšie ako všetci jeho susedia naľavo od neho. Samozrejme, opäť aj overíme, či máme skutočne práve tie prieniky, ktoré majú byť.
+Takto nám časová zložitosť klesne na $O(n!)$, pretože už skúšame iba všetky poradia. Tento algoritmus je implementovaný v súbore \code{bruteforce_smarter.py}.
+
+Zatiaľ čo hľadanie výšok a dĺžok sa nám darí robiť celkom efektívne, hľadanie poradia je stále veľmi neefektívne. Zistenia z \href{https://arxiv.org/abs/1808.04148}{článku V. Jelínka a M. Töpfera o grounded-L grafoch}.
+
+\paragraph{Eliminácia vzorov}\mbox{} \\
+
+Z vyššie spomínaného \href{https://arxiv.org/abs/1808.04148}{článku} vieme, že poradie nesmie obsahovať nejaké podpostupnosti dĺžky 4. 
+Poradia teda budeme skúšať vo vzostupnom poradí podľa čísla premutácie a pri každej permutácii overíme, či sa v nom nachádza nejaký zakázaný vzor. Ak áno, preskočíme všetky nasledujúce permutácie v ktorých sa tento vzor bude nachádzať. 
+
+Presnejšie, pre aktuálnu permutáciu budeme pre jednotlivé vrcholy zľava doprava overovať, či daný vrchol netvorí zakázaný vzor spolu s nejakými tromi vrcholmi naľavo od neho a ak áno, nepreskočíme iba na nasledujúcu permutáciu, ale rovno na najmenšiu takú, ktorá má na tomto mieste iný vrchol.
+
+Časová zložitosť tohoto algoritmu je síce $O(n!)$, no v praxi sa ukazuje, že je rýchlejší ako predchádzajúce. Je implementovaný v súbore \code{pattern_elimination.py}.
+
+\paragraph{Paralelizácia}\mbox{} \\
+
+Paralelizovať vieme hociktorý z vyššie popísaných algoritmov úplne priamočiaro, pretože overovania jednotlivých usporiadaní sú úplne nezávislé. Všetky poradia teda rozdelíme rovnomerne viacerým procesom (čo je počet dostupných vlakien), a skončíme buď ak prvý z nich objaví vyhovujúce poradie, alebo ak každý z nich prejde všetky poradia a zistí, že ani jedno z nich nevyhovuje.
+
+Tento algoritmus má časovú zložitosť $O(\frac{X}{p})$, kde $X$ je časová zložitosť póvodného algoritmu a $p$ je počet procesov, ktorú použijeme (typicky počet vlákien, teda na bežných počítačoch nanajvýš v ráde desiatok).
+
+V súbore \code{parallelization.py} je paralelne implementovaný algoritmus \textit{eliminácie vzorov} a teda jeho časová zložitosť je $O(\frac{n!}{p})$.
+
+Multiprocessing je implementovaný pomocou knižnice \code{concurrent}.
+
+\section{Editor usporiadania grounded-L grafov}
+
+Na skúmanie Grounded-L grafov sa môže hodiť nástroj na pozorovanie lokálnych úprav poradia vrcholov, v ktorom vime jednoducho meniť poradie vrcholov a vidíme zlé prieniky.
+Implementácia sa nachádza v súbore \code{orderng_visualizer.py}.
+
+Na vykresľovanie je opäť použitá knižnica \textit{tkinter}.
+
+Program jednoducho pre užívateľom zvolené poradie zvolí výšky a dĺžky ako sme vyššie popisovali a, aj napriek prebytočným prienikom, vykreslí graf a zvýrazní zlé prieniky.
+
+\section{Grafový editor}
+
+Grafový editor slúži na jednoduché vytvorenie testovacích vstupov pre bežné grafové úlohy, vrátane našej. 
+
+Hlavné funkcie sú:
+\begin{itemize}
+    \item Jednoduché vytvorenie menších grafov
+    \item Export do štandardného grafového textového formátu
+    \item Možnosť integrovať postprocessing vytvoreného grafu (v našom prípade chceme vykresliť jeho Grounded-L reprezentáciu)
+\end{itemize}
+
+Program vieme rozčleniť na \textit{backend} a \textit{frontend}.
+
+\subsection{Backend}
+
+Backend je tvoreny jedným, objektom triedy \code{Graph}, v ktorom je uložený celý graf a obsahuje základné metódy na pridanie/odobranie vrcholu/hrany, ale aj serializáciu grafu do \textit{štandardného grafového formátu}. 
+
+Každý vrchol má navyše svoj \textit{label}, teda meno. To sú stále zasebouidúce čísla začínajúce nulou. Po vymazaní ľubovoľného vrcholu sa vrcholy vždy premenujú, aby boli \textit{labely} stále zasebouidúce.
+
+\paragraph{Štandardný grafový formát}\mbox{} \\
+
+Tento formát sa používa v takmer každej grafovej úlohe \textit{kompetetívneho programovania}.
+V prvom riadku je počet vrcholov a počet hrán a na zvyšných riadkoch sú dvojice vrcholov medzi ktorými vedie hrana. Napríklad $K_4$ vyzerá takto:
+
+\begin{verbatim}
+    4 6
+    0 1
+    0 2
+    0 3
+    1 2
+    1 3
+    2 3
+\end{verbatim}
+
+\subsection{Frontend}
+
+Na vykresľovanie je opäť použitá knižnica \text{tkinter}.
+
+Frontend je tvorený objektom triedy \code{Screen}, ktorý si drží stav grafu v objekte \code{Graph} a vlastný \code{tkinter.canvas} a všetky potrebné parametre na vykresľovanie (ako napríklad rozmery okna, alebo veľkosť vrcholov).
+
+Pre komunikáciu backendu a frontendu sú dôležité listy \code{vertex_id}, \code{edge_id} a \code{label_id}, ktoré priraďujú id objektov frontendu (jednotlivé krivky vrcholov, hrán a ich labely) ku objektom backendu.
+
+\subsection{Postprocessing grafu}
+
+Často chceme s vytvoreným grafom rovno niečo spraviť. Napríklad v našom prípade chceme vykresliť jeho Grounded-L reprezentáciu. Na to slúži optional argument \code{submit_fn} (a \code{submit_button_text} a \code{submit_button_tooltip}) objektu \code{Screen} kde môžeme špecifikovať čo sa má s grafom stať. Funkciu voláme tlačidlom na \textit{canvase} (ak nie ej špecifikovaná, tlačidlo nebude existovať).
+
+Funkcia musí brať v prvom parametri súbor z ktorého načíta graf. Keď objekt \code{Screen} túto funkciu volá, uloží graf do dočasného súboru a ten pošle do funkcie v prvom parametri.
+
+
+\end{document}
